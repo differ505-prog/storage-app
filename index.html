@@ -111,12 +111,10 @@
             padding-bottom: 0.5rem;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            /* Firefox */
         }
 
         .tag-scroll::-webkit-scrollbar {
             display: none;
-            /* Chrome/Safari */
         }
 
         /* Pull to Refresh */
@@ -143,105 +141,199 @@
             border-radius: 2px;
             padding: 0 2px;
         }
+
+        /* Toast Animation */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+            transition: all 0.2s ease;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Scope Button Active State */
+        .scope-btn {
+            transition: all 0.2s;
+        }
+
+        .scope-btn.active {
+            background-color: #0A84FF;
+            color: white;
+            border-color: #0A84FF;
+        }
     </style>
 </head>
 
 <body class="bg-ios-bg text-ios-text antialiased min-h-screen flex flex-col">
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="bg-ios-card px-6 py-4 rounded-2xl shadow-2xl border border-ios-separator">
+            <p id="toastMessage" class="text-white text-center font-medium"></p>
+        </div>
+    </div>
+
     <!-- Setup Modal (Shown if no CSV URL) -->
     <div id="setupModal"
         class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
         <div class="bg-ios-card w-full max-w-md rounded-2xl p-6 border border-ios-separator shadow-2xl">
             <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-ios-blue/20 mb-4"><svg
-                        class="w-8 h-8 text-ios-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-ios-blue/20 mb-4">
+                    <svg class="w-8 h-8 text-ios-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg></div>
+                    </svg>
+                </div>
                 <h2 class="text-2xl font-bold text-white">連結你的收納庫</h2>
                 <p class="text-ios-subtext mt-2 text-sm">請輸入 Google Sheets 的 CSV 網址以開始使用。</p>
             </div>
             <div class="space-y-4">
-                <div><label class="block text-xs font-medium text-ios-subtext mb-1 uppercase tracking-wider">CSV
-                        網址</label><input type="text" id="setupInput"
+                <div>
+                    <label class="block text-xs font-medium text-ios-subtext mb-1 uppercase tracking-wider">CSV
+                        網址</label>
+                    <input type="text" id="setupInput"
                         class="w-full bg-ios-input border border-ios-separator rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-ios-blue focus:ring-1 focus:ring-ios-blue transition-all"
-                        placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"></div>
+                        placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+                </div>
                 <!-- Accordion for Instructions -->
-                <div class="border border-ios-separator rounded-xl overflow-hidden"><button id="toggleInstructions"
-                        class="w-full flex items-center justify-between p-3 bg-ios-input/50 hover:bg-ios-input transition-colors text-sm font-medium"><span>如何取得網址？</span><svg
-                            id="arrowIcon" class="w-4 h-4 transform transition-transform" fill="none"
+                <div class="border border-ios-separator rounded-xl overflow-hidden">
+                    <button id="toggleInstructions"
+                        class="w-full flex items-center justify-between p-3 bg-ios-input/50 hover:bg-ios-input transition-colors text-sm font-medium">
+                        <span>如何取得網址？</span>
+                        <svg id="arrowIcon" class="w-4 h-4 transform transition-transform" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg></button>
+                        </svg>
+                    </button>
                     <div id="instructionsBody"
                         class="hidden bg-ios-input/30 p-3 text-xs text-ios-subtext space-y-2 border-t border-ios-separator">
                         <p>1. 打開你的 Google Sheet。</p>
-                        <p>2. 點擊左上角 <strong>檔案 (File)</strong>><strong>分享 (Share)</strong>><strong>發布到網路 (Publish to
+                        <p>2. 點擊左上角 <strong>檔案 (File)</strong> > <strong>分享 (Share)</strong> > <strong>發布到網路 (Publish to
                                 web)</strong>。</p>
-                        <p>3. 在對話框中，選擇 <strong>整份文件 (Entire Document)</strong>或特定工作表。</p>
-                        <p>4. 將格式從 <strong>網頁 (Web page)</strong>改為 <strong>逗號分隔值 (.csv)</strong>。</p>
-                        <p>5. 點擊 <strong>發布 (Publish)</strong>並複製產生的連結。</p>
+                        <p>3. 在對話框中，選擇 <strong>整份文件 (Entire Document)</strong> 或特定工作表。</p>
+                        <p>4. 將格式從 <strong>網頁 (Web page)</strong> 改為 <strong>逗號分隔值 (.csv)</strong>。</p>
+                        <p>5. 點擊 <strong>發布 (Publish)</strong> 並複製產生的連結。</p>
+                        <p class="pt-2 border-t border-ios-separator mt-2"><strong>範本格式：</strong><br>
+                            試算表第一列應包含：<br>
+                            <code class="bg-ios-card px-1 py-0.5 rounded text-ios-blue">Item</code>
+                            <code class="bg-ios-card px-1 py-0.5 rounded text-ios-blue">Category</code>
+                            <code class="bg-ios-card px-1 py-0.5 rounded text-ios-blue">Location</code>
+                            <code class="bg-ios-card px-1 py-0.5 rounded text-ios-blue">Container</code>
+                            <code class="bg-ios-card px-1 py-0.5 rounded text-gray-400">Notes (選填)</code>
+                        </p>
                     </div>
                 </div>
                 <div id="setupError" class="hidden text-red-500 text-xs text-center"></div>
-                <div class="flex gap-3 mt-6"><button id="testConnectionBtn"
-                        class="flex-1 py-3 rounded-xl bg-ios-input text-ios-blue font-semibold text-sm hover:bg-opacity-80 transition-colors">測試連線
-                    </button><button id="saveConnectionBtn"
-                        class="flex-1 py-3 rounded-xl bg-ios-blue text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">開始使用
-                    </button></div>
-                <div class="text-center mt-2"><button id="useDemoBtn"
-                        class="text-xs text-ios-subtext underline hover:text-white">先試用範例資料 </button></div>
+                <div class="flex gap-3 mt-6">
+                    <button id="testConnectionBtn"
+                        class="flex-1 py-3 rounded-xl bg-ios-input text-ios-blue font-semibold text-sm hover:bg-opacity-80 transition-colors">
+                        測試連線
+                    </button>
+                    <button id="saveConnectionBtn"
+                        class="flex-1 py-3 rounded-xl bg-ios-blue text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">
+                        開始使用
+                    </button>
+                </div>
+                <div class="text-center mt-2">
+                    <button id="useDemoBtn" class="text-xs text-ios-subtext underline hover:text-white">
+                        先試用範例資料
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
     <!-- Sticky Header & Search -->
     <header
         class="sticky top-0 z-40 blur-header border-b border-ios-separator pt-2 pb-3 px-4 transition-all duration-300">
         <div class="flex items-center justify-between mb-3 mt-8">
             <h1 class="text-3xl font-bold tracking-tight">我的收納庫</h1>
             <div class="flex items-center gap-2">
-                <!-- Refresh Button --><button id="refreshBtn"
-                    class="p-2 rounded-full bg-ios-input text-ios-blue hover:bg-ios-separator transition-colors"><svg
-                        class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Refresh Button -->
+                <button id="refreshBtn"
+                    class="p-2 rounded-full bg-ios-input text-ios-blue hover:bg-ios-separator transition-colors"
+                    aria-label="重新整理">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg></button>
-                <!-- Settings Button --><button id="settingsBtn"
-                    class="p-2 rounded-full bg-ios-input text-ios-subtext hover:text-white hover:bg-ios-separator transition-colors"><svg
-                        class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    </svg>
+                </button>
+                <!-- Settings Button -->
+                <button id="settingsBtn"
+                    class="p-2 rounded-full bg-ios-input text-ios-subtext hover:text-white hover:bg-ios-separator transition-colors"
+                    aria-label="設定">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg></button>
+                    </svg>
+                </button>
             </div>
         </div>
         <!-- Status Bar -->
-        <div class="flex items-center justify-between text-xs text-ios-subtext mb-3 px-1"><span
-                id="itemCount">載入中...</span><span id="lastUpdated"></span></div>
+        <div class="flex items-center justify-between text-xs text-ios-subtext mb-3 px-1">
+            <span id="itemCount" aria-live="polite">載入中...</span>
+            <span id="lastUpdated"></span>
+        </div>
         <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg
-                    class="h-5 w-5 text-ios-subtext" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-ios-subtext" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg></div><input type="text" id="searchInput"
+                </svg>
+            </div>
+            <input type="text" id="searchInput"
                 class="block w-full pl-10 pr-3 py-2.5 rounded-xl bg-ios-input border-none text-ios-text placeholder-ios-subtext focus:ring-2 focus:ring-ios-blue focus:outline-none text-lg transition-all"
-                placeholder="輸入物品名稱 (例如: 電池)...">
-            <!-- Clear Button --><button id="clearBtn"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center hidden"><svg
-                    class="h-5 w-5 text-ios-subtext bg-ios-subtext/20 rounded-full p-0.5" viewBox="0 0 20 20"
+                placeholder="輸入物品名稱 (例如: 電池)..." aria-label="搜尋物品">
+            <!-- Clear Button -->
+            <button id="clearBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden" aria-label="清除搜尋">
+                <svg class="h-5 w-5 text-ios-subtext bg-ios-subtext/20 rounded-full p-0.5" viewBox="0 0 20 20"
                     fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd" />
                     <path
                         d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                </svg></button>
+                </svg>
+            </button>
         </div>
+
+        <!-- Search Scope Buttons -->
+        <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar" id="scopeButtons">
+            <button data-scope="all"
+                class="scope-btn whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-sm font-medium border border-ios-separator transition-colors active">
+                全部
+            </button>
+            <button data-scope="item"
+                class="scope-btn whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors">
+                物品名稱
+            </button>
+            <button data-scope="category"
+                class="scope-btn whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors">
+                分類
+            </button>
+            <button data-scope="location"
+                class="scope-btn whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors">
+                地點
+            </button>
+            <button data-scope="container"
+                class="scope-btn whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors">
+                容器
+            </button>
+        </div>
+
         <!-- Quick Filters -->
         <div id="quickFilters" class="mt-3 hidden">
+            <div class="text-xs text-ios-subtext mb-2 px-1">常用標籤</div>
             <div class="tag-scroll" id="filterTags"></div>
         </div>
     </header>
+
     <!-- Offline Toast -->
     <div id="offlineToast" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-30 hidden">
         <div
@@ -249,37 +341,97 @@
             <svg class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
-            </svg>離線模式 - 顯示上次資料
+            </svg>
+            離線模式 - 顯示上次資料
         </div>
     </div>
+
     <!-- Main Content List -->
     <main class="flex-1 p-4 space-y-4 overflow-y-auto no-scrollbar relative" id="resultsList">
         <!-- Pull to Refresh Indicator -->
         <div id="ptr" class="ptr-element">
-            <div class="flex items-center gap-2"><svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg><span>更新中...</span></div>
+                </svg>
+                <span>更新中...</span>
+            </div>
         </div>
+
         <!-- Loading State -->
-        <div id="loading" class="text-center text-ios-subtext mt-10">
+        <div id="loading" class="text-center text-ios-subtext mt-10 hidden">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-ios-blue mx-auto mb-3"></div>
             <p class="animate-pulse text-sm">正在同步資料庫...</p>
         </div>
+
+        <!-- Skeleton Loading -->
+        <div id="skeletonLoading" class="space-y-3">
+            <div class="skeleton bg-ios-card rounded-xl p-4 border border-ios-separator h-32"></div>
+            <div class="skeleton bg-ios-card rounded-xl p-4 border border-ios-separator h-32"></div>
+            <div class="skeleton bg-ios-card rounded-xl p-4 border border-ios-separator h-32"></div>
+        </div>
+
         <!-- Empty State -->
         <div id="emptyState" class="hidden text-center mt-20">
-            <div class="inline-block p-4 rounded-full bg-ios-input mb-4"><svg class="h-10 w-10 text-ios-subtext"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="inline-block p-4 rounded-full bg-ios-input mb-4">
+                <svg class="h-10 w-10 text-ios-subtext" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg></div>
+                </svg>
+            </div>
             <p class="text-ios-subtext text-lg">找不到相關物品</p>
             <p class="text-ios-subtext text-sm mt-2">試試看不同的關鍵字？</p>
         </div>
+
+        <!-- Empty Database State -->
+        <div id="emptyDatabaseState" class="hidden text-center mt-16 px-4">
+            <div class="inline-block p-4 rounded-full bg-ios-input mb-4">
+                <svg class="h-12 w-12 text-ios-subtext" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">試算表是空的</h3>
+            <p class="text-ios-subtext text-sm mb-6">開始建立你的第一個收納紀錄吧！</p>
+
+            <div class="bg-ios-card rounded-xl p-4 border border-ios-separator text-left mb-6">
+                <p class="text-xs text-ios-subtext mb-2">📋 試算表格式說明</p>
+                <p class="text-sm text-gray-300 mb-3">第一列應包含以下欄位名稱：</p>
+                <div class="space-y-1 text-xs">
+                    <div class="flex items-center">
+                        <span class="bg-ios-blue/20 text-ios-blue px-2 py-1 rounded font-mono mr-2">Item</span>
+                        <span class="text-gray-400">物品名稱（必填）</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="bg-ios-blue/20 text-ios-blue px-2 py-1 rounded font-mono mr-2">Category</span>
+                        <span class="text-gray-400">分類（必填）</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="bg-ios-blue/20 text-ios-blue px-2 py-1 rounded font-mono mr-2">Location</span>
+                        <span class="text-gray-400">位置（建議）</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="bg-ios-blue/20 text-ios-blue px-2 py-1 rounded font-mono mr-2">Container</span>
+                        <span class="text-gray-400">容器（選填）</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="bg-gray-700 text-gray-400 px-2 py-1 rounded font-mono mr-2">Notes</span>
+                        <span class="text-gray-400">備註（選填）</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="reloadAfterSetup"
+                class="w-full py-3 rounded-xl bg-ios-blue text-white font-semibold hover:bg-blue-600 transition-colors">
+                我已新增資料，重新載入
+            </button>
+        </div>
     </main>
+
     <!-- Details Modal -->
-    <div id="detailsModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div id="detailsModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true"
+        aria-labelledby="modalTitle">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop">
         </div>
@@ -289,11 +441,15 @@
             <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-6"></div>
             <div id="modalBody" class="space-y-6">
                 <!-- Content injected by JS -->
-            </div><button id="closeModalBtn"
-                class="w-full mt-8 py-3.5 rounded-xl bg-ios-input text-white font-semibold text-lg hover:bg-gray-700 transition-colors">關閉
+            </div>
+            <button id="closeModalBtn"
+                class="w-full mt-8 py-3.5 rounded-xl bg-ios-input text-white font-semibold text-lg hover:bg-gray-700 transition-colors"
+                aria-label="關閉">
+                關閉
             </button>
         </div>
     </div>
+
     <!-- Script Logic -->
     <script>
         // ==========================================
@@ -309,9 +465,9 @@
 
         // MOCK DATA (Demo)
         const MOCK_DATA = [
-            { Item: "3號電池", Category: "電子耗材", Container: "白色收納盒 A", Location: "書桌右抽屜" },
+            { Item: "3號電池", Category: "電子耗材", Container: "白色收納盒 A", Location: "書桌右抽屜", Notes: "共 8 顆" },
             { Item: "指甲剪", Category: "衛浴用品", Container: "隨身包", Location: "浴室鏡櫃" },
-            { Item: "感冒藥", Category: "藥品", Container: "急救箱", Location: "客廳電視櫃" },
+            { Item: "感冒藥", Category: "藥品", Container: "急救箱", Location: "客廳電視櫃", Notes: "效期至 2026/03" },
             { Item: "護照", Category: "重要文件", Container: "保險箱", Location: "臥室衣櫃上方" },
             { Item: "USB Type-C 線", Category: "3C 線材", Container: "透明夾鏈袋", Location: "書桌左抽屜" },
             { Item: "發票", Category: "雜物", Container: "餅乾盒", Location: "客廳茶几" }
@@ -332,7 +488,9 @@
             searchInput: document.getElementById('searchInput'),
             resultsList: document.getElementById('resultsList'),
             loadingDiv: document.getElementById('loading'),
+            skeletonLoading: document.getElementById('skeletonLoading'),
             emptyState: document.getElementById('emptyState'),
+            emptyDatabaseState: document.getElementById('emptyDatabaseState'),
             clearBtn: document.getElementById('clearBtn'),
 
             refreshBtn: document.getElementById('refreshBtn'),
@@ -341,7 +499,7 @@
             lastUpdated: document.getElementById('lastUpdated'),
             offlineToast: document.getElementById('offlineToast'),
 
-            // New Elements
+            scopeButtons: document.querySelectorAll('.scope-btn'),
             quickFilters: document.getElementById('quickFilters'),
             filterTags: document.getElementById('filterTags'),
             detailsModal: document.getElementById('detailsModal'),
@@ -349,7 +507,10 @@
             modalContent: document.getElementById('modalContent'),
             modalBody: document.getElementById('modalBody'),
             closeModalBtn: document.getElementById('closeModalBtn'),
-            ptr: document.getElementById('ptr')
+            ptr: document.getElementById('ptr'),
+            toast: document.getElementById('toast'),
+            toastMessage: document.getElementById('toastMessage'),
+            reloadAfterSetup: document.getElementById('reloadAfterSetup')
         };
 
         // ==========================================
@@ -359,13 +520,16 @@
             initApp();
             setupEventListeners();
             setupPullToRefresh();
+            setupKeyboardShortcuts();
         });
 
         function initApp() {
             if (!STATE.csvUrl && STATE.data.length === 0) {
                 UI.setupModal.classList.remove('hidden');
+                UI.skeletonLoading.classList.add('hidden');
             } else {
                 if (STATE.data.length > 0) {
+                    UI.skeletonLoading.classList.add('hidden');
                     renderList(STATE.data);
                     updateStats(true);
                     generateQuickFilters();
@@ -388,9 +552,11 @@
                 STATE.data = MOCK_DATA;
                 saveData();
                 UI.setupModal.classList.add('hidden');
+                UI.skeletonLoading.classList.add('hidden');
                 renderList(STATE.data);
                 updateStats();
                 generateQuickFilters();
+                showToast('已切換至演示模式');
             });
 
             UI.testConnectionBtn.addEventListener('click', async () => {
@@ -398,13 +564,13 @@
                 if (!rawUrl) return showError("請輸入網址");
 
                 const url = transformToCsvUrl(rawUrl);
-
                 setLoading(true, "測試連線中...");
+
                 try {
                     const data = await parseCSV(url);
 
                     if (!data || data.length === 0) {
-                        showError("連線成功但沒有資料");
+                        showError("⚠️ 連線成功但試算表是空的", "text-yellow-500");
                         return;
                     }
 
@@ -424,11 +590,13 @@
 
                 } catch (e) {
                     console.error(e);
-                    let errorMsg = "連線失敗。";
-                    if (rawUrl.includes('docs.google.com')) {
+                    let errorMsg = "❌ 連線失敗";
+                    if (e.message && e.message.includes('CORS')) {
+                        errorMsg += "\n請確認已發布到網路且選擇 CSV 格式";
+                    } else if (rawUrl.includes('docs.google.com')) {
                         errorMsg += "\n請務必使用「檔案 > 共用 > 發布到網路」\n(不是右上角的共用按鈕)";
                     } else {
-                        errorMsg += "\n請檢查網址是否正確";
+                        errorMsg += "\n請檢查網址是否正確或網路連線";
                     }
                     showError(errorMsg);
                 } finally {
@@ -441,8 +609,8 @@
                 if (!rawUrl) return showError("請輸入網址");
 
                 const url = transformToCsvUrl(rawUrl);
-
                 setLoading(true, "正在儲存並同步...");
+
                 try {
                     const data = await parseCSV(url);
                     STATE.csvUrl = url;
@@ -451,14 +619,48 @@
                     saveData();
 
                     UI.setupModal.classList.add('hidden');
-                    renderList(STATE.data);
-                    updateStats();
-                    generateQuickFilters();
+                    UI.skeletonLoading.classList.add('hidden');
+
+                    if (data.length === 0) {
+                        showEmptyDatabaseState();
+                    } else {
+                        renderList(STATE.data);
+                        updateStats();
+                        generateQuickFilters();
+                        showToast('✓ 連線成功');
+                    }
                 } catch (e) {
                     showError("無法讀取資料，請確認權限設定");
                 } finally {
                     setLoading(false);
                 }
+            });
+
+            // Reload after setup
+            UI.reloadAfterSetup.addEventListener('click', () => {
+                if (STATE.csvUrl) {
+                    fetchData();
+                } else {
+                    showToast('請先在設定中連結試算表', 'warning');
+                }
+            });
+
+            // Search Scope Buttons
+            UI.scopeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    UI.scopeButtons.forEach(b => {
+                        b.classList.remove('active');
+                        b.classList.add('text-ios-subtext');
+                    });
+                    btn.classList.add('active');
+                    btn.classList.remove('text-ios-subtext');
+                    STATE.searchScope = btn.dataset.scope;
+
+                    // Re-trigger search
+                    if (UI.searchInput.value) {
+                        handleSearch({ target: { value: UI.searchInput.value } });
+                    }
+                });
             });
 
             // Search & Filter
@@ -472,7 +674,7 @@
 
             UI.refreshBtn.addEventListener('click', () => {
                 if (STATE.isDemo) {
-                    alert("目前是範例模式，無法更新。請到設定連結 Google Sheet。");
+                    showToast('演示模式無法更新', 'warning');
                     return;
                 }
                 fetchData();
@@ -487,6 +689,23 @@
             // Modal
             UI.closeModalBtn.addEventListener('click', closeModal);
             UI.modalBackdrop.addEventListener('click', closeModal);
+        }
+
+        // ==========================================
+        // KEYBOARD SHORTCUTS
+        // ==========================================
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // ESC to close modal
+                if (e.key === 'Escape' && !UI.detailsModal.classList.contains('hidden')) {
+                    closeModal();
+                }
+                // / to focus search
+                if (e.key === '/' && document.activeElement !== UI.searchInput) {
+                    e.preventDefault();
+                    UI.searchInput.focus();
+                }
+            });
         }
 
         // ==========================================
@@ -511,7 +730,6 @@
                 const diff = currentY - startY;
 
                 if (diff > 0 && UI.resultsList.scrollTop === 0) {
-                    // Resistance effect
                     const translateY = Math.min(diff * 0.4, threshold + 20);
                     UI.ptr.style.transform = `translateY(${translateY - 60}px)`;
 
@@ -529,7 +747,6 @@
                 const diff = currentY - startY;
 
                 if (diff > threshold && UI.resultsList.scrollTop === 0) {
-                    // Trigger refresh
                     UI.ptr.style.transform = 'translateY(0px)';
                     UI.ptr.querySelector('span').innerText = "更新中...";
                     UI.ptr.querySelector('svg').classList.add('animate-spin');
@@ -537,11 +754,14 @@
 
                     if (STATE.isDemo) {
                         setTimeout(() => {
-                            alert("演示模式無法更新");
+                            showToast('演示模式無法更新', 'warning');
                             resetPtr();
                         }, 1000);
                     } else {
-                        fetchData().then(resetPtr).catch(resetPtr);
+                        fetchData().then(() => {
+                            resetPtr();
+                            showToast('✓ 已更新');
+                        }).catch(resetPtr);
                     }
                 } else {
                     resetPtr();
@@ -585,15 +805,62 @@
         }
 
         function highlightText(text, keywords) {
-            if (!keywords || keywords.length === 0) return text;
+            if (!keywords || keywords.length === 0 || !text) return text || '';
+
             let highlighted = text;
-            keywords.forEach(key => {
+            // Sort keywords by length (longest first) to avoid partial matches
+            const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+
+            sortedKeywords.forEach(key => {
                 if (key) {
-                    const regex = new RegExp(`(${key})`, 'gi');
+                    // Escape special regex characters
+                    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escapedKey})`, 'gi');
                     highlighted = highlighted.replace(regex, '<mark>$1</mark>');
                 }
             });
             return highlighted;
+        }
+
+        function getRelativeTime(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            const isToday = date.toDateString() === now.toDateString();
+            const isYesterday = new Date(now.setDate(now.getDate() - 1)).toDateString() === date.toDateString();
+
+            if (diffMins < 1) return '剛剛';
+            if (diffMins < 60) return `${diffMins} 分鐘前`;
+            if (diffHours < 24 && isToday) {
+                return `今天 ${date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}`;
+            }
+            if (isYesterday) return '昨天';
+            if (diffDays < 7) return `${diffDays} 天前`;
+
+            return date.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
+        }
+
+        function showToast(message, type = 'success') {
+            UI.toastMessage.innerText = message;
+
+            // Change color based on type
+            const toastDiv = UI.toast.querySelector('div');
+            if (type === 'warning') {
+                toastDiv.className = 'bg-yellow-600 px-6 py-4 rounded-2xl shadow-2xl border border-yellow-500';
+            } else if (type === 'error') {
+                toastDiv.className = 'bg-red-600 px-6 py-4 rounded-2xl shadow-2xl border border-red-500';
+            } else {
+                toastDiv.className = 'bg-ios-card px-6 py-4 rounded-2xl shadow-2xl border border-ios-separator';
+            }
+
+            UI.toast.classList.add('show');
+            setTimeout(() => {
+                UI.toast.classList.remove('show');
+            }, 2000);
         }
 
         // ==========================================
@@ -602,7 +869,7 @@
         function fetchData() {
             if (!STATE.csvUrl) return Promise.resolve();
 
-            UI.loadingDiv.classList.remove('hidden');
+            UI.skeletonLoading.classList.remove('hidden');
             UI.refreshBtn.classList.add('animate-spin');
 
             return new Promise((resolve, reject) => {
@@ -615,19 +882,25 @@
                         STATE.lastUpdated = new Date().toISOString();
                         saveData();
 
-                        renderList(STATE.data);
-                        updateStats();
-                        generateQuickFilters();
+                        UI.skeletonLoading.classList.add('hidden');
 
-                        UI.loadingDiv.classList.add('hidden');
+                        if (STATE.data.length === 0) {
+                            showEmptyDatabaseState();
+                        } else {
+                            renderList(STATE.data);
+                            updateStats();
+                            generateQuickFilters();
+                        }
+
                         UI.refreshBtn.classList.remove('animate-spin');
                         UI.offlineToast.classList.add('hidden');
                         resolve();
                     },
                     error: function (err) {
                         console.error("Fetch error:", err);
-                        UI.loadingDiv.classList.add('hidden');
+                        UI.skeletonLoading.classList.add('hidden');
                         UI.refreshBtn.classList.remove('animate-spin');
+
                         if (STATE.data.length > 0) {
                             UI.offlineToast.classList.remove('hidden');
                             setTimeout(() => UI.offlineToast.classList.add('hidden'), 3000);
@@ -660,17 +933,20 @@
 
         function updateStats(isCached = false) {
             UI.itemCount.innerText = `總共 ${STATE.data.length} 筆物品`;
+
             if (STATE.lastUpdated) {
-                const date = new Date(STATE.lastUpdated);
-                const timeStr = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-                UI.lastUpdated.innerText = `上次更新: ${timeStr}`;
+                const relativeTime = getRelativeTime(STATE.lastUpdated);
+                UI.lastUpdated.innerText = `更新: ${relativeTime}`;
             } else {
                 UI.lastUpdated.innerText = '';
             }
         }
 
         function generateQuickFilters() {
-            if (!STATE.data.length) return;
+            if (!STATE.data.length) {
+                UI.quickFilters.classList.add('hidden');
+                return;
+            }
 
             // Count frequencies
             const counts = {};
@@ -679,25 +955,38 @@
                 if (row.Location) counts[row.Location] = (counts[row.Location] || 0) + 1;
             });
 
-            // Sort and take top 5
+            // Sort and take top 6
             const topTags = Object.entries(counts)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 6)
                 .map(entry => entry[0]);
 
+            if (topTags.length === 0) {
+                UI.quickFilters.classList.add('hidden');
+                return;
+            }
+
             UI.filterTags.innerHTML = '';
             topTags.forEach(tag => {
                 const btn = document.createElement('button');
-                btn.className = 'whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors hover:bg-gray-700 hover:text-white';
+                btn.className = 'whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors hover:bg-gray-700 hover:text-white active:scale-95';
                 btn.innerText = tag;
                 btn.addEventListener('click', () => {
                     UI.searchInput.value = tag;
                     handleSearch({ target: { value: tag } });
+                    UI.searchInput.focus();
                 });
                 UI.filterTags.appendChild(btn);
             });
 
             UI.quickFilters.classList.remove('hidden');
+        }
+
+        function showEmptyDatabaseState() {
+            UI.resultsList.innerHTML = '';
+            UI.emptyState.classList.add('hidden');
+            UI.emptyDatabaseState.classList.remove('hidden');
+            UI.resultsList.appendChild(UI.emptyDatabaseState);
         }
 
         // ==========================================
@@ -726,10 +1015,28 @@
                 const category = row.Category ? row.Category.toLowerCase() : "";
                 const location = row.Location ? row.Location.toLowerCase() : "";
                 const container = row.Container ? row.Container.toLowerCase() : "";
-                const fullText = `${item} ${category} ${location} ${container}`;
+
+                // Search based on scope
+                let searchText = '';
+                switch (STATE.searchScope) {
+                    case 'item':
+                        searchText = item;
+                        break;
+                    case 'category':
+                        searchText = category;
+                        break;
+                    case 'location':
+                        searchText = location;
+                        break;
+                    case 'container':
+                        searchText = container;
+                        break;
+                    default: // 'all'
+                        searchText = `${item} ${category} ${location} ${container}`;
+                }
 
                 // AND logic: all keywords must be present
-                return keywords.every(key => fullText.includes(key));
+                return keywords.every(key => searchText.includes(key));
             });
 
             renderList(filtered, keywords);
@@ -737,8 +1044,8 @@
 
         function renderList(data, keywords = []) {
             UI.resultsList.innerHTML = '';
-            // Re-append PTR
             UI.resultsList.appendChild(UI.ptr);
+            UI.emptyDatabaseState.classList.add('hidden');
 
             if (data.length === 0) {
                 UI.resultsList.appendChild(UI.emptyState);
@@ -753,6 +1060,8 @@
             data.forEach(row => {
                 const card = document.createElement('div');
                 card.className = 'bg-ios-card rounded-xl p-4 mb-3 border border-ios-separator shadow-sm active:scale-95 transition-transform duration-200 cursor-pointer';
+                card.setAttribute('role', 'button');
+                card.setAttribute('tabindex', '0');
 
                 // Highlight text
                 const itemHtml = highlightText(row.Item || '未命名', keywords);
@@ -786,6 +1095,10 @@
                 `;
 
                 card.addEventListener('click', () => openModal(row));
+                card.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') openModal(row);
+                });
+
                 fragment.appendChild(card);
             });
 
@@ -796,7 +1109,7 @@
             UI.modalBody.innerHTML = `
                 <div>
                     <label class="text-xs text-ios-subtext uppercase tracking-wider">物品名稱</label>
-                    <h2 class="text-3xl font-bold text-white mt-1">${item.Item || '未命名'}</h2>
+                    <h2 id="modalTitle" class="text-3xl font-bold text-white mt-1">${item.Item || '未命名'}</h2>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -819,13 +1132,12 @@
 
                 ${item.Notes ? `
                 <div class="bg-ios-input/30 p-4 rounded-xl border border-ios-separator">
-                    <label class="text-xs text-ios-subtext mb-1">備註</label>
-                    <p class="text-base text-gray-300">${item.Notes}</p>
+                    <label class="text-xs text-ios-subtext mb-1 block">📝 備註</label>
+                    <p class="text-base text-gray-300 whitespace-pre-wrap">${item.Notes}</p>
                 </div>` : ''}
             `;
 
             UI.detailsModal.classList.remove('hidden');
-            // Trigger animation
             requestAnimationFrame(() => {
                 UI.modalBackdrop.classList.remove('opacity-0');
                 UI.modalContent.classList.remove('translate-y-full');
@@ -843,7 +1155,7 @@
 
         function showError(msg, colorClass = "text-red-500") {
             UI.setupError.innerText = msg;
-            UI.setupError.className = `text-xs text-center ${colorClass}`;
+            UI.setupError.className = `text-xs text-center whitespace-pre-wrap ${colorClass}`;
             UI.setupError.classList.remove('hidden');
         }
 
