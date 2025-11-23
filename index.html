@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>我的收納庫</title>
+
+    <!-- iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="收納庫">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <!-- Tailwind Config for iOS Font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        ios: {
+                            bg: '#000000',
+                            card: '#1C1C1E',
+                            input: '#2C2C2E',
+                            text: '#FFFFFF',
+                            subtext: '#8E8E93',
+                            blue: '#0A84FF',
+                            separator: '#38383A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* iOS Scroll Behavior */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            background-color: #000000;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Hide Scrollbar but allow scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .blur-header {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background-color: rgba(28, 28, 30, 0.8);
+        }
+
+        /* Modal Animation */
+        .modal-enter {
+            transform: translateY(100%);
+        }
+
+        .modal-enter-active {
+            transform: translateY(0);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-exit {
+            transform: translateY(0);
+        }
+
+        .modal-exit-active {
+            transform: translateY(100%);
+            transition: transform 0.25s ease-in;
+        }
+
+        /* Skeleton Animation */
+        .skeleton {
+            background: linear-gradient(90deg, #2C2C2E 25%, #3A3A3C 50%, #2C2C2E 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Horizontal Scroll Tags */
+        .tag-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .tag-scroll::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari */
+        }
+
+        /* Pull to Refresh */
+        .ptr-element {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8E8E93;
+            font-size: 0.875rem;
+            transform: translateY(-100%);
+            pointer-events: none;
+        }
+
+        /* Search Highlight */
+        mark {
+            background-color: rgba(255, 214, 10, 0.3);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+    </style>
+</head>
+
+<body class="bg-ios-bg text-ios-text antialiased min-h-screen flex flex-col">
+    <!-- Setup Modal (Shown if no CSV URL) -->
+    <div id="setupModal"
+        class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-ios-card w-full max-w-md rounded-2xl p-6 border border-ios-separator shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-ios-blue/20 mb-4"><svg
+                        class="w-8 h-8 text-ios-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg></div>
+                <h2 class="text-2xl font-bold text-white">連結你的收納庫</h2>
+                <p class="text-ios-subtext mt-2 text-sm">請輸入 Google Sheets 的 CSV 網址以開始使用。</p>
+            </div>
+            <div class="space-y-4">
+                <div><label class="block text-xs font-medium text-ios-subtext mb-1 uppercase tracking-wider">CSV
+                        網址</label><input type="text" id="setupInput"
+                        class="w-full bg-ios-input border border-ios-separator rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-ios-blue focus:ring-1 focus:ring-ios-blue transition-all"
+                        placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"></div>
+                <!-- Accordion for Instructions -->
+                <div class="border border-ios-separator rounded-xl overflow-hidden"><button id="toggleInstructions"
+                        class="w-full flex items-center justify-between p-3 bg-ios-input/50 hover:bg-ios-input transition-colors text-sm font-medium"><span>如何取得網址？</span><svg
+                            id="arrowIcon" class="w-4 h-4 transform transition-transform" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg></button>
+                    <div id="instructionsBody"
+                        class="hidden bg-ios-input/30 p-3 text-xs text-ios-subtext space-y-2 border-t border-ios-separator">
+                        <p>1. 打開你的 Google Sheet。</p>
+                        <p>2. 點擊左上角 <strong>檔案 (File)</strong>><strong>分享 (Share)</strong>><strong>發布到網路 (Publish to
+                                web)</strong>。</p>
+                        <p>3. 在對話框中，選擇 <strong>整份文件 (Entire Document)</strong>或特定工作表。</p>
+                        <p>4. 將格式從 <strong>網頁 (Web page)</strong>改為 <strong>逗號分隔值 (.csv)</strong>。</p>
+                        <p>5. 點擊 <strong>發布 (Publish)</strong>並複製產生的連結。</p>
+                    </div>
+                </div>
+                <div id="setupError" class="hidden text-red-500 text-xs text-center"></div>
+                <div class="flex gap-3 mt-6"><button id="testConnectionBtn"
+                        class="flex-1 py-3 rounded-xl bg-ios-input text-ios-blue font-semibold text-sm hover:bg-opacity-80 transition-colors">測試連線
+                    </button><button id="saveConnectionBtn"
+                        class="flex-1 py-3 rounded-xl bg-ios-blue text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">開始使用
+                    </button></div>
+                <div class="text-center mt-2"><button id="useDemoBtn"
+                        class="text-xs text-ios-subtext underline hover:text-white">先試用範例資料 </button></div>
+            </div>
+        </div>
+    </div>
+    <!-- Sticky Header & Search -->
+    <header
+        class="sticky top-0 z-40 blur-header border-b border-ios-separator pt-2 pb-3 px-4 transition-all duration-300">
+        <div class="flex items-center justify-between mb-3 mt-8">
+            <h1 class="text-3xl font-bold tracking-tight">我的收納庫</h1>
+            <div class="flex items-center gap-2">
+                <!-- Refresh Button --><button id="refreshBtn"
+                    class="p-2 rounded-full bg-ios-input text-ios-blue hover:bg-ios-separator transition-colors"><svg
+                        class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg></button>
+                <!-- Settings Button --><button id="settingsBtn"
+                    class="p-2 rounded-full bg-ios-input text-ios-subtext hover:text-white hover:bg-ios-separator transition-colors"><svg
+                        class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg></button>
+            </div>
+        </div>
+        <!-- Status Bar -->
+        <div class="flex items-center justify-between text-xs text-ios-subtext mb-3 px-1"><span
+                id="itemCount">載入中...</span><span id="lastUpdated"></span></div>
+        <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg
+                    class="h-5 w-5 text-ios-subtext" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg></div><input type="text" id="searchInput"
+                class="block w-full pl-10 pr-3 py-2.5 rounded-xl bg-ios-input border-none text-ios-text placeholder-ios-subtext focus:ring-2 focus:ring-ios-blue focus:outline-none text-lg transition-all"
+                placeholder="輸入物品名稱 (例如: 電池)...">
+            <!-- Clear Button --><button id="clearBtn"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center hidden"><svg
+                    class="h-5 w-5 text-ios-subtext bg-ios-subtext/20 rounded-full p-0.5" viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clip-rule="evenodd" />
+                    <path
+                        d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg></button>
+        </div>
+        <!-- Quick Filters -->
+        <div id="quickFilters" class="mt-3 hidden">
+            <div class="tag-scroll" id="filterTags"></div>
+        </div>
+    </header>
+    <!-- Offline Toast -->
+    <div id="offlineToast" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-30 hidden">
+        <div
+            class="bg-yellow-600/90 backdrop-blur text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-lg flex items-center">
+            <svg class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+            </svg>離線模式 - 顯示上次資料
+        </div>
+    </div>
+    <!-- Main Content List -->
+    <main class="flex-1 p-4 space-y-4 overflow-y-auto no-scrollbar relative" id="resultsList">
+        <!-- Pull to Refresh Indicator -->
+        <div id="ptr" class="ptr-element">
+            <div class="flex items-center gap-2"><svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg><span>更新中...</span></div>
+        </div>
+        <!-- Loading State -->
+        <div id="loading" class="text-center text-ios-subtext mt-10">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-ios-blue mx-auto mb-3"></div>
+            <p class="animate-pulse text-sm">正在同步資料庫...</p>
+        </div>
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center mt-20">
+            <div class="inline-block p-4 rounded-full bg-ios-input mb-4"><svg class="h-10 w-10 text-ios-subtext"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg></div>
+            <p class="text-ios-subtext text-lg">找不到相關物品</p>
+            <p class="text-ios-subtext text-sm mt-2">試試看不同的關鍵字？</p>
+        </div>
+    </main>
+    <!-- Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop">
+        </div>
+        <!-- Modal Content -->
+        <div class="absolute bottom-0 left-0 right-0 bg-ios-card rounded-t-2xl p-6 transform translate-y-full transition-transform duration-300 ease-out"
+            id="modalContent">
+            <div class="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-6"></div>
+            <div id="modalBody" class="space-y-6">
+                <!-- Content injected by JS -->
+            </div><button id="closeModalBtn"
+                class="w-full mt-8 py-3.5 rounded-xl bg-ios-input text-white font-semibold text-lg hover:bg-gray-700 transition-colors">關閉
+            </button>
+        </div>
+    </div>
+    <!-- Script Logic -->
+    <script>
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        const STATE = {
+            csvUrl: localStorage.getItem('storage_app_csv_url') || "",
+            data: JSON.parse(localStorage.getItem('storage_app_data') || "[]"),
+            lastUpdated: localStorage.getItem('storage_app_last_updated') || null,
+            isDemo: false,
+            searchScope: 'all'
+        };
+
+        // MOCK DATA (Demo)
+        const MOCK_DATA = [
+            { Item: "3號電池", Category: "電子耗材", Container: "白色收納盒 A", Location: "書桌右抽屜" },
+            { Item: "指甲剪", Category: "衛浴用品", Container: "隨身包", Location: "浴室鏡櫃" },
+            { Item: "感冒藥", Category: "藥品", Container: "急救箱", Location: "客廳電視櫃" },
+            { Item: "護照", Category: "重要文件", Container: "保險箱", Location: "臥室衣櫃上方" },
+            { Item: "USB Type-C 線", Category: "3C 線材", Container: "透明夾鏈袋", Location: "書桌左抽屜" },
+            { Item: "發票", Category: "雜物", Container: "餅乾盒", Location: "客廳茶几" }
+        ];
+
+        // DOM Elements
+        const UI = {
+            setupModal: document.getElementById('setupModal'),
+            setupInput: document.getElementById('setupInput'),
+            toggleInstructions: document.getElementById('toggleInstructions'),
+            instructionsBody: document.getElementById('instructionsBody'),
+            arrowIcon: document.getElementById('arrowIcon'),
+            testConnectionBtn: document.getElementById('testConnectionBtn'),
+            saveConnectionBtn: document.getElementById('saveConnectionBtn'),
+            useDemoBtn: document.getElementById('useDemoBtn'),
+            setupError: document.getElementById('setupError'),
+
+            searchInput: document.getElementById('searchInput'),
+            resultsList: document.getElementById('resultsList'),
+            loadingDiv: document.getElementById('loading'),
+            emptyState: document.getElementById('emptyState'),
+            clearBtn: document.getElementById('clearBtn'),
+
+            refreshBtn: document.getElementById('refreshBtn'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            itemCount: document.getElementById('itemCount'),
+            lastUpdated: document.getElementById('lastUpdated'),
+            offlineToast: document.getElementById('offlineToast'),
+
+            // New Elements
+            quickFilters: document.getElementById('quickFilters'),
+            filterTags: document.getElementById('filterTags'),
+            detailsModal: document.getElementById('detailsModal'),
+            modalBackdrop: document.getElementById('modalBackdrop'),
+            modalContent: document.getElementById('modalContent'),
+            modalBody: document.getElementById('modalBody'),
+            closeModalBtn: document.getElementById('closeModalBtn'),
+            ptr: document.getElementById('ptr')
+        };
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            setupEventListeners();
+            setupPullToRefresh();
+        });
+
+        function initApp() {
+            if (!STATE.csvUrl && STATE.data.length === 0) {
+                UI.setupModal.classList.remove('hidden');
+            } else {
+                if (STATE.data.length > 0) {
+                    renderList(STATE.data);
+                    updateStats(true);
+                    generateQuickFilters();
+                }
+                if (STATE.csvUrl) {
+                    fetchData();
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            // Setup Modal Interactions
+            UI.toggleInstructions.addEventListener('click', () => {
+                UI.instructionsBody.classList.toggle('hidden');
+                UI.arrowIcon.classList.toggle('rotate-180');
+            });
+
+            UI.useDemoBtn.addEventListener('click', () => {
+                STATE.isDemo = true;
+                STATE.data = MOCK_DATA;
+                saveData();
+                UI.setupModal.classList.add('hidden');
+                renderList(STATE.data);
+                updateStats();
+                generateQuickFilters();
+            });
+
+            UI.testConnectionBtn.addEventListener('click', async () => {
+                const rawUrl = UI.setupInput.value.trim();
+                if (!rawUrl) return showError("請輸入網址");
+
+                const url = transformToCsvUrl(rawUrl);
+
+                setLoading(true, "測試連線中...");
+                try {
+                    const data = await parseCSV(url);
+
+                    if (!data || data.length === 0) {
+                        showError("連線成功但沒有資料");
+                        return;
+                    }
+
+                    const firstRow = data[0];
+                    const requiredFields = ['Item', 'Category'];
+                    const hasHeaders = requiredFields.every(field => field in firstRow);
+
+                    if (!hasHeaders) {
+                        console.warn("Missing headers:", firstRow);
+                        let msg = "⚠️ 連線成功，但格式可能有誤！\n請確認第一列標題包含：Item, Category, Location, Container";
+                        showError(msg, "text-yellow-500");
+                    } else {
+                        showError("✅ 連線成功！找到 " + data.length + " 筆資料", "text-green-500");
+                    }
+
+                    UI.setupInput.value = url;
+
+                } catch (e) {
+                    console.error(e);
+                    let errorMsg = "連線失敗。";
+                    if (rawUrl.includes('docs.google.com')) {
+                        errorMsg += "\n請務必使用「檔案 > 共用 > 發布到網路」\n(不是右上角的共用按鈕)";
+                    } else {
+                        errorMsg += "\n請檢查網址是否正確";
+                    }
+                    showError(errorMsg);
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            UI.saveConnectionBtn.addEventListener('click', async () => {
+                const rawUrl = UI.setupInput.value.trim();
+                if (!rawUrl) return showError("請輸入網址");
+
+                const url = transformToCsvUrl(rawUrl);
+
+                setLoading(true, "正在儲存並同步...");
+                try {
+                    const data = await parseCSV(url);
+                    STATE.csvUrl = url;
+                    STATE.data = data;
+                    STATE.isDemo = false;
+                    saveData();
+
+                    UI.setupModal.classList.add('hidden');
+                    renderList(STATE.data);
+                    updateStats();
+                    generateQuickFilters();
+                } catch (e) {
+                    showError("無法讀取資料，請確認權限設定");
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            // Search & Filter
+            UI.searchInput.addEventListener('input', debounce(handleSearch, 300));
+
+            UI.clearBtn.addEventListener('click', () => {
+                UI.searchInput.value = '';
+                handleSearch({ target: { value: '' } });
+                UI.searchInput.focus();
+            });
+
+            UI.refreshBtn.addEventListener('click', () => {
+                if (STATE.isDemo) {
+                    alert("目前是範例模式，無法更新。請到設定連結 Google Sheet。");
+                    return;
+                }
+                fetchData();
+            });
+
+            UI.settingsBtn.addEventListener('click', () => {
+                UI.setupInput.value = STATE.csvUrl;
+                UI.setupModal.classList.remove('hidden');
+                UI.setupError.classList.add('hidden');
+            });
+
+            // Modal
+            UI.closeModalBtn.addEventListener('click', closeModal);
+            UI.modalBackdrop.addEventListener('click', closeModal);
+        }
+
+        // ==========================================
+        // PULL TO REFRESH
+        // ==========================================
+        function setupPullToRefresh() {
+            let startY = 0;
+            let currentY = 0;
+            let isDragging = false;
+            const threshold = 80;
+
+            UI.resultsList.addEventListener('touchstart', (e) => {
+                if (UI.resultsList.scrollTop === 0) {
+                    startY = e.touches[0].clientY;
+                    isDragging = true;
+                }
+            }, { passive: true });
+
+            UI.resultsList.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentY = e.touches[0].clientY;
+                const diff = currentY - startY;
+
+                if (diff > 0 && UI.resultsList.scrollTop === 0) {
+                    // Resistance effect
+                    const translateY = Math.min(diff * 0.4, threshold + 20);
+                    UI.ptr.style.transform = `translateY(${translateY - 60}px)`;
+
+                    if (translateY > 60) {
+                        UI.ptr.querySelector('span').innerText = "放開以更新";
+                        UI.ptr.querySelector('svg').classList.remove('animate-spin');
+                        UI.ptr.querySelector('svg').style.transform = 'rotate(180deg)';
+                    }
+                }
+            }, { passive: true });
+
+            UI.resultsList.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                const diff = currentY - startY;
+
+                if (diff > threshold && UI.resultsList.scrollTop === 0) {
+                    // Trigger refresh
+                    UI.ptr.style.transform = 'translateY(0px)';
+                    UI.ptr.querySelector('span').innerText = "更新中...";
+                    UI.ptr.querySelector('svg').classList.add('animate-spin');
+                    UI.ptr.querySelector('svg').style.transform = '';
+
+                    if (STATE.isDemo) {
+                        setTimeout(() => {
+                            alert("演示模式無法更新");
+                            resetPtr();
+                        }, 1000);
+                    } else {
+                        fetchData().then(resetPtr).catch(resetPtr);
+                    }
+                } else {
+                    resetPtr();
+                }
+            });
+
+            function resetPtr() {
+                UI.ptr.style.transition = 'transform 0.3s ease';
+                UI.ptr.style.transform = 'translateY(-100%)';
+                setTimeout(() => {
+                    UI.ptr.style.transition = '';
+                    UI.ptr.querySelector('span').innerText = "更新中...";
+                }, 300);
+            }
+        }
+
+        // ==========================================
+        // HELPER FUNCTIONS
+        // ==========================================
+        function transformToCsvUrl(url) {
+            if (url.includes('output=csv')) return url;
+            if (url.includes('/pubhtml')) return url.replace('/pubhtml', '/pub?output=csv');
+
+            const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (idMatch && idMatch[1]) {
+                const id = idMatch[1];
+                let gid = '0';
+                const gidMatch = url.match(/[#&]gid=([0-9]+)/);
+                if (gidMatch && gidMatch[1]) gid = gidMatch[1];
+                return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
+            }
+            return url;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function highlightText(text, keywords) {
+            if (!keywords || keywords.length === 0) return text;
+            let highlighted = text;
+            keywords.forEach(key => {
+                if (key) {
+                    const regex = new RegExp(`(${key})`, 'gi');
+                    highlighted = highlighted.replace(regex, '<mark>$1</mark>');
+                }
+            });
+            return highlighted;
+        }
+
+        // ==========================================
+        // DATA LOGIC
+        // ==========================================
+        function fetchData() {
+            if (!STATE.csvUrl) return Promise.resolve();
+
+            UI.loadingDiv.classList.remove('hidden');
+            UI.refreshBtn.classList.add('animate-spin');
+
+            return new Promise((resolve, reject) => {
+                Papa.parse(STATE.csvUrl, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function (results) {
+                        STATE.data = results.data;
+                        STATE.lastUpdated = new Date().toISOString();
+                        saveData();
+
+                        renderList(STATE.data);
+                        updateStats();
+                        generateQuickFilters();
+
+                        UI.loadingDiv.classList.add('hidden');
+                        UI.refreshBtn.classList.remove('animate-spin');
+                        UI.offlineToast.classList.add('hidden');
+                        resolve();
+                    },
+                    error: function (err) {
+                        console.error("Fetch error:", err);
+                        UI.loadingDiv.classList.add('hidden');
+                        UI.refreshBtn.classList.remove('animate-spin');
+                        if (STATE.data.length > 0) {
+                            UI.offlineToast.classList.remove('hidden');
+                            setTimeout(() => UI.offlineToast.classList.add('hidden'), 3000);
+                        }
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        function parseCSV(url) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(url, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => resolve(results.data),
+                    error: (err) => reject(err)
+                });
+            });
+        }
+
+        function saveData() {
+            localStorage.setItem('storage_app_csv_url', STATE.csvUrl);
+            localStorage.setItem('storage_app_data', JSON.stringify(STATE.data));
+            if (STATE.lastUpdated) {
+                localStorage.setItem('storage_app_last_updated', STATE.lastUpdated);
+            }
+        }
+
+        function updateStats(isCached = false) {
+            UI.itemCount.innerText = `總共 ${STATE.data.length} 筆物品`;
+            if (STATE.lastUpdated) {
+                const date = new Date(STATE.lastUpdated);
+                const timeStr = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                UI.lastUpdated.innerText = `上次更新: ${timeStr}`;
+            } else {
+                UI.lastUpdated.innerText = '';
+            }
+        }
+
+        function generateQuickFilters() {
+            if (!STATE.data.length) return;
+
+            // Count frequencies
+            const counts = {};
+            STATE.data.forEach(row => {
+                if (row.Category) counts[row.Category] = (counts[row.Category] || 0) + 1;
+                if (row.Location) counts[row.Location] = (counts[row.Location] || 0) + 1;
+            });
+
+            // Sort and take top 5
+            const topTags = Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6)
+                .map(entry => entry[0]);
+
+            UI.filterTags.innerHTML = '';
+            topTags.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.className = 'whitespace-nowrap px-3 py-1.5 rounded-full bg-ios-input text-ios-subtext text-sm font-medium border border-ios-separator transition-colors hover:bg-gray-700 hover:text-white';
+                btn.innerText = tag;
+                btn.addEventListener('click', () => {
+                    UI.searchInput.value = tag;
+                    handleSearch({ target: { value: tag } });
+                });
+                UI.filterTags.appendChild(btn);
+            });
+
+            UI.quickFilters.classList.remove('hidden');
+        }
+
+        // ==========================================
+        // UI LOGIC
+        // ==========================================
+        function handleSearch(e) {
+            const rawQuery = e.target.value.toLowerCase().trim();
+
+            // Toggle clear button
+            if (rawQuery.length > 0) {
+                UI.clearBtn.classList.remove('hidden');
+            } else {
+                UI.clearBtn.classList.add('hidden');
+            }
+
+            if (!rawQuery) {
+                renderList(STATE.data);
+                return;
+            }
+
+            // Multi-keyword split
+            const keywords = rawQuery.split(/\s+/).filter(k => k);
+
+            const filtered = STATE.data.filter(row => {
+                const item = row.Item ? row.Item.toLowerCase() : "";
+                const category = row.Category ? row.Category.toLowerCase() : "";
+                const location = row.Location ? row.Location.toLowerCase() : "";
+                const container = row.Container ? row.Container.toLowerCase() : "";
+                const fullText = `${item} ${category} ${location} ${container}`;
+
+                // AND logic: all keywords must be present
+                return keywords.every(key => fullText.includes(key));
+            });
+
+            renderList(filtered, keywords);
+        }
+
+        function renderList(data, keywords = []) {
+            UI.resultsList.innerHTML = '';
+            // Re-append PTR
+            UI.resultsList.appendChild(UI.ptr);
+
+            if (data.length === 0) {
+                UI.resultsList.appendChild(UI.emptyState);
+                UI.emptyState.classList.remove('hidden');
+                return;
+            } else {
+                UI.emptyState.classList.add('hidden');
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            data.forEach(row => {
+                const card = document.createElement('div');
+                card.className = 'bg-ios-card rounded-xl p-4 mb-3 border border-ios-separator shadow-sm active:scale-95 transition-transform duration-200 cursor-pointer';
+
+                // Highlight text
+                const itemHtml = highlightText(row.Item || '未命名', keywords);
+                const catHtml = highlightText(row.Category || '未分類', keywords);
+                const locHtml = highlightText(row.Location || '未知地點', keywords);
+                const contHtml = highlightText(row.Container || '直接放置', keywords);
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between pointer-events-none">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">${itemHtml}</h3>
+                            <span class="inline-block px-2 py-0.5 rounded-md bg-gray-700 text-gray-300 text-xs mb-3">
+                                ${catHtml}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                             <div class="text-2xl opacity-80">📦</div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mt-1 pointer-events-none">
+                        <div class="flex items-center text-ios-subtext">
+                            <span class="w-4 h-4 mr-2 opacity-70">📍</span>
+                            <span class="text-sm font-medium text-white">${locHtml}</span>
+                        </div>
+                        <div class="flex items-center text-ios-subtext">
+                            <span class="w-4 h-4 mr-2 opacity-70">📥</span>
+                            <span class="text-sm text-gray-400">${contHtml}</span>
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => openModal(row));
+                fragment.appendChild(card);
+            });
+
+            UI.resultsList.appendChild(fragment);
+        }
+
+        function openModal(item) {
+            UI.modalBody.innerHTML = `
+                <div>
+                    <label class="text-xs text-ios-subtext uppercase tracking-wider">物品名稱</label>
+                    <h2 class="text-3xl font-bold text-white mt-1">${item.Item || '未命名'}</h2>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-ios-input/50 p-3 rounded-xl">
+                        <label class="text-xs text-ios-subtext">分類</label>
+                        <p class="text-lg font-medium text-white">${item.Category || '-'}</p>
+                    </div>
+                    <div class="bg-ios-input/50 p-3 rounded-xl">
+                        <label class="text-xs text-ios-subtext">容器</label>
+                        <p class="text-lg font-medium text-white">${item.Container || '-'}</p>
+                    </div>
+                </div>
+
+                <div class="bg-ios-input/30 p-4 rounded-xl border border-ios-separator">
+                    <label class="flex items-center text-xs text-ios-subtext mb-2">
+                        <span class="mr-1">📍</span> 詳細位置
+                    </label>
+                    <p class="text-xl text-white font-medium">${item.Location || '-'}</p>
+                </div>
+
+                ${item.Notes ? `
+                <div class="bg-ios-input/30 p-4 rounded-xl border border-ios-separator">
+                    <label class="text-xs text-ios-subtext mb-1">備註</label>
+                    <p class="text-base text-gray-300">${item.Notes}</p>
+                </div>` : ''}
+            `;
+
+            UI.detailsModal.classList.remove('hidden');
+            // Trigger animation
+            requestAnimationFrame(() => {
+                UI.modalBackdrop.classList.remove('opacity-0');
+                UI.modalContent.classList.remove('translate-y-full');
+            });
+        }
+
+        function closeModal() {
+            UI.modalBackdrop.classList.add('opacity-0');
+            UI.modalContent.classList.add('translate-y-full');
+
+            setTimeout(() => {
+                UI.detailsModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function showError(msg, colorClass = "text-red-500") {
+            UI.setupError.innerText = msg;
+            UI.setupError.className = `text-xs text-center ${colorClass}`;
+            UI.setupError.classList.remove('hidden');
+        }
+
+        function setLoading(isLoading, msg = "") {
+            if (isLoading) {
+                UI.setupError.innerText = msg;
+                UI.setupError.className = "text-xs text-center text-ios-blue animate-pulse";
+                UI.setupError.classList.remove('hidden');
+            } else {
+                UI.setupError.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>
