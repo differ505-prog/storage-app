@@ -327,6 +327,17 @@
             </button>
         </div>
 
+        <!-- Category Filter -->
+        <div id="categoryFilter" class="mt-3 hidden">
+            <div class="flex items-center justify-between mb-2 px-1">
+                <div class="text-xs text-ios-subtext">類別篩選</div>
+                <button id="clearCategoriesBtn" class="text-xs text-ios-blue hover:text-blue-400 transition-colors hidden">
+                    清除篩選
+                </button>
+            </div>
+            <div class="tag-scroll" id="categoryTags"></div>
+        </div>
+
         <!-- Quick Filters -->
         <div id="quickFilters" class="mt-3 hidden">
             <div class="text-xs text-ios-subtext mb-2 px-1">常用標籤</div>
@@ -460,7 +471,9 @@
             data: JSON.parse(localStorage.getItem('storage_app_data') || "[]"),
             lastUpdated: localStorage.getItem('storage_app_last_updated') || null,
             isDemo: false,
-            searchScope: 'all'
+            searchScope: 'all',
+            selectedCategories: [],
+            allCategories: {}
         };
 
         // MOCK DATA (Demo)
@@ -500,6 +513,9 @@
             offlineToast: document.getElementById('offlineToast'),
 
             scopeButtons: document.querySelectorAll('.scope-btn'),
+            categoryFilter: document.getElementById('categoryFilter'),
+            categoryTags: document.getElementById('categoryTags'),
+            clearCategoriesBtn: document.getElementById('clearCategoriesBtn'),
             quickFilters: document.getElementById('quickFilters'),
             filterTags: document.getElementById('filterTags'),
             detailsModal: document.getElementById('detailsModal'),
@@ -532,6 +548,7 @@
                     UI.skeletonLoading.classList.add('hidden');
                     renderList(STATE.data);
                     updateStats(true);
+                    generateCategoryFilter();
                     generateQuickFilters();
                 }
                 if (STATE.csvUrl) {
@@ -555,6 +572,7 @@
                 UI.skeletonLoading.classList.add('hidden');
                 renderList(STATE.data);
                 updateStats();
+                generateCategoryFilter();
                 generateQuickFilters();
                 showToast('已切換至演示模式');
             });
@@ -626,6 +644,7 @@
                     } else {
                         renderList(STATE.data);
                         updateStats();
+                        generateCategoryFilter();
                         generateQuickFilters();
                         showToast('✓ 連線成功');
                     }
@@ -661,6 +680,13 @@
                         handleSearch({ target: { value: UI.searchInput.value } });
                     }
                 });
+            });
+
+            // Category Filter
+            UI.clearCategoriesBtn.addEventListener('click', () => {
+                STATE.selectedCategories = [];
+                generateCategoryFilter();
+                applyFilters();
             });
 
             // Search & Filter
@@ -889,6 +915,7 @@
                         } else {
                             renderList(STATE.data);
                             updateStats();
+                            generateCategoryFilter();
                             generateQuickFilters();
                         }
 
@@ -940,6 +967,83 @@
             } else {
                 UI.lastUpdated.innerText = '';
             }
+        }
+
+        function generateCategoryFilter() {
+            if (!STATE.data.length) {
+                UI.categoryFilter.classList.add('hidden');
+                return;
+            }
+
+            // Count categories
+            const categoryCounts = {};
+            STATE.data.forEach(row => {
+                if (row.Category) {
+                    categoryCounts[row.Category] = (categoryCounts[row.Category] || 0) + 1;
+                }
+            });
+
+            STATE.allCategories = categoryCounts;
+
+            const categories = Object.keys(categoryCounts).sort();
+            if (categories.length === 0) {
+                UI.categoryFilter.classList.add('hidden');
+                return;
+            }
+
+            UI.categoryTags.innerHTML = '';
+
+            // Add "All" button
+            const allBtn = document.createElement('button');
+            const isAllSelected = STATE.selectedCategories.length === 0;
+            allBtn.className = `whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95 ${
+                isAllSelected 
+                    ? 'bg-ios-blue text-white border-ios-blue shadow-md shadow-blue-900/30' 
+                    : 'bg-ios-input text-ios-subtext border-ios-separator hover:bg-gray-700 hover:text-white'
+            }`;
+            allBtn.innerHTML = '全部 <span class="ml-1 text-xs opacity-75">' + STATE.data.length + '</span>';
+            allBtn.addEventListener('click', () => {
+                STATE.selectedCategories = [];
+                generateCategoryFilter();
+                applyFilters();
+            });
+            UI.categoryTags.appendChild(allBtn);
+
+            // Add category buttons
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isSelected = STATE.selectedCategories.includes(cat);
+                btn.className = `whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95 ${
+                    isSelected 
+                        ? 'bg-ios-blue text-white border-ios-blue shadow-md shadow-blue-900/30' 
+                        : 'bg-ios-input text-ios-subtext border-ios-separator hover:bg-gray-700 hover:text-white'
+                }`;
+                btn.innerHTML = `${cat} <span class="ml-1 text-xs opacity-75">${categoryCounts[cat]}</span>`;
+                btn.addEventListener('click', () => {
+                    toggleCategory(cat);
+                });
+                UI.categoryTags.appendChild(btn);
+            });
+
+            // Show/hide clear button
+            if (STATE.selectedCategories.length > 0) {
+                UI.clearCategoriesBtn.classList.remove('hidden');
+            } else {
+                UI.clearCategoriesBtn.classList.add('hidden');
+            }
+
+            UI.categoryFilter.classList.remove('hidden');
+        }
+
+        function toggleCategory(category) {
+            const index = STATE.selectedCategories.indexOf(category);
+            if (index > -1) {
+                STATE.selectedCategories.splice(index, 1);
+            } else {
+                STATE.selectedCategories.push(category);
+            }
+            generateCategoryFilter();
+            applyFilters();
         }
 
         function generateQuickFilters() {
@@ -1002,44 +1106,57 @@
                 UI.clearBtn.classList.add('hidden');
             }
 
-            if (!rawQuery) {
-                renderList(STATE.data);
-                return;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const rawQuery = UI.searchInput.value.toLowerCase().trim();
+            let filtered = STATE.data;
+
+            // Apply category filter first
+            if (STATE.selectedCategories.length > 0) {
+                filtered = filtered.filter(row => {
+                    return STATE.selectedCategories.includes(row.Category);
+                });
             }
 
-            // Multi-keyword split
-            const keywords = rawQuery.split(/\s+/).filter(k => k);
+            // Then apply search filter if there's a query
+            if (rawQuery) {
+                const keywords = rawQuery.split(/\s+/).filter(k => k);
 
-            const filtered = STATE.data.filter(row => {
-                const item = row.Item ? row.Item.toLowerCase() : "";
-                const category = row.Category ? row.Category.toLowerCase() : "";
-                const location = row.Location ? row.Location.toLowerCase() : "";
-                const container = row.Container ? row.Container.toLowerCase() : "";
+                filtered = filtered.filter(row => {
+                    const item = row.Item ? row.Item.toLowerCase() : "";
+                    const category = row.Category ? row.Category.toLowerCase() : "";
+                    const location = row.Location ? row.Location.toLowerCase() : "";
+                    const container = row.Container ? row.Container.toLowerCase() : "";
 
-                // Search based on scope
-                let searchText = '';
-                switch (STATE.searchScope) {
-                    case 'item':
-                        searchText = item;
-                        break;
-                    case 'category':
-                        searchText = category;
-                        break;
-                    case 'location':
-                        searchText = location;
-                        break;
-                    case 'container':
-                        searchText = container;
-                        break;
-                    default: // 'all'
-                        searchText = `${item} ${category} ${location} ${container}`;
-                }
+                    // Search based on scope
+                    let searchText = '';
+                    switch (STATE.searchScope) {
+                        case 'item':
+                            searchText = item;
+                            break;
+                        case 'category':
+                            searchText = category;
+                            break;
+                        case 'location':
+                            searchText = location;
+                            break;
+                        case 'container':
+                            searchText = container;
+                            break;
+                        default: // 'all'
+                            searchText = `${item} ${category} ${location} ${container}`;
+                    }
 
-                // AND logic: all keywords must be present
-                return keywords.every(key => searchText.includes(key));
-            });
+                    // AND logic: all keywords must be present
+                    return keywords.every(key => searchText.includes(key));
+                });
 
-            renderList(filtered, keywords);
+                renderList(filtered, rawQuery.split(/\s+/).filter(k => k));
+            } else {
+                renderList(filtered);
+            }
         }
 
         function renderList(data, keywords = []) {
