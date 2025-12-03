@@ -24,17 +24,26 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
                     },
                     colors: {
                         ios: {
                             bg: '#000000',
                             card: '#1C1C1E',
-                            input: '#2C2C2E',
+                            cardHover: '#2C2C2E',
+                            input: '#1C1C1E',
+                            inputBorder: '#38383A',
                             text: '#FFFFFF',
-                            subtext: '#8E8E93',
+                            textSecondary: '#EBEBF5',
+                            subtext: '#98989D',
+                            subtextLight: '#636366',
                             blue: '#0A84FF',
-                            separator: '#38383A'
+                            blueHover: '#0077ED',
+                            blueDark: '#0051D5',
+                            separator: '#38383A',
+                            success: '#30D158',
+                            warning: '#FFD60A',
+                            error: '#FF453A'
                         }
                     }
                 }
@@ -49,6 +58,9 @@
             background-color: #000000;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            font-feature-settings: "kern" 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Hide Scrollbar but allow scrolling */
@@ -62,9 +74,36 @@
         }
 
         .blur-header {
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background-color: rgba(28, 28, 30, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: rgba(0, 0, 0, 0.72);
+            border-bottom: 0.5px solid rgba(56, 56, 58, 0.5);
+        }
+
+        /* Modern Card Styles */
+        .ios-card {
+            background: linear-gradient(145deg, #1C1C1E 0%, #1A1A1C 100%);
+            border: 1px solid rgba(56, 56, 58, 0.6);
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.3),
+                0 4px 12px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ios-card:hover {
+            background: linear-gradient(145deg, #2C2C2E 0%, #252527 100%);
+            border-color: rgba(56, 56, 58, 0.8);
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.4),
+                0 8px 20px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .ios-card:active {
+            transform: scale(0.98) translateY(0);
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Modal Animation */
@@ -74,7 +113,7 @@
 
         .modal-enter-active {
             transform: translateY(0);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
         }
 
         .modal-exit {
@@ -83,14 +122,17 @@
 
         .modal-exit-active {
             transform: translateY(100%);
-            transition: transform 0.25s ease-in;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 1, 1);
         }
 
         /* Skeleton Animation */
         .skeleton {
-            background: linear-gradient(90deg, #2C2C2E 25%, #3A3A3C 50%, #2C2C2E 75%);
+            background: linear-gradient(90deg,
+                    #1C1C1E 0%,
+                    #2C2C2E 50%,
+                    #1C1C1E 100%);
             background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
+            animation: skeleton-loading 1.8s ease-in-out infinite;
         }
 
         @keyframes skeleton-loading {
@@ -128,7 +170,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #8E8E93;
+            color: #98989D;
             font-size: 0.875rem;
             transform: translateY(-100%);
             pointer-events: none;
@@ -136,10 +178,13 @@
 
         /* Search Highlight */
         mark {
-            background-color: rgba(255, 214, 10, 0.3);
+            background: linear-gradient(135deg,
+                    rgba(255, 214, 10, 0.35) 0%,
+                    rgba(255, 214, 10, 0.25) 100%);
             color: inherit;
-            border-radius: 2px;
-            padding: 0 2px;
+            border-radius: 3px;
+            padding: 1px 3px;
+            box-shadow: 0 0 10px rgba(255, 214, 10, 0.15);
         }
 
         /* Toast Animation */
@@ -149,7 +194,7 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
             opacity: 0;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
             z-index: 9999;
             pointer-events: none;
         }
@@ -159,15 +204,112 @@
             opacity: 1;
         }
 
-        /* Scope Button Active State */
+        /* Button Styles */
+        .ios-button {
+            background: linear-gradient(180deg, #0A84FF 0%, #0077ED 100%);
+            box-shadow:
+                0 1px 3px rgba(10, 132, 255, 0.3),
+                0 4px 12px rgba(10, 132, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ios-button:hover {
+            background: linear-gradient(180deg, #0077ED 0%, #0051D5 100%);
+            box-shadow:
+                0 2px 8px rgba(10, 132, 255, 0.4),
+                0 8px 20px rgba(10, 132, 255, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .ios-button:active {
+            transform: scale(0.97) translateY(0);
+            box-shadow:
+                0 1px 2px rgba(10, 132, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        /* Category Tag Styles */
+        .category-tag {
+            background: linear-gradient(145deg, #1C1C1E 0%, #1A1A1C 100%);
+            border: 1px solid rgba(56, 56, 58, 0.6);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-tag:hover {
+            background: linear-gradient(145deg, #2C2C2E 0%, #252527 100%);
+            border-color: rgba(56, 56, 58, 0.8);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        }
+
+        .category-tag.active {
+            background: linear-gradient(180deg, #0A84FF 0%, #0077ED 100%);
+            border-color: #0A84FF;
+            box-shadow:
+                0 2px 8px rgba(10, 132, 255, 0.35),
+                0 4px 16px rgba(10, 132, 255, 0.20),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .category-tag:active {
+            transform: scale(0.95);
+        }
+
+        /* Scope Button Styles */
         .scope-btn {
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(145deg, #1C1C1E 0%, #1A1A1C 100%);
+            border: 1px solid rgba(56, 56, 58, 0.6);
+        }
+
+        .scope-btn:hover {
+            background: linear-gradient(145deg, #2C2C2E 0%, #252527 100%);
         }
 
         .scope-btn.active {
-            background-color: #0A84FF;
+            background: linear-gradient(180deg, #0A84FF 0%, #0077ED 100%);
             color: white;
             border-color: #0A84FF;
+            box-shadow:
+                0 2px 8px rgba(10, 132, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Input Styles */
+        .ios-input {
+            background: rgba(28, 28, 30, 0.8);
+            border: 1px solid rgba(56, 56, 58, 0.6);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ios-input:focus {
+            background: rgba(28, 28, 30, 0.95);
+            border-color: #0A84FF;
+            box-shadow:
+                0 0 0 3px rgba(10, 132, 255, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(152, 152, 157, 0.2);
+            border-radius: 9px;
+            color: #98989D;
+        }
+
+        .badge-active {
+            background: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.9);
         }
     </style>
 </head>
@@ -199,7 +341,7 @@
                     <label class="block text-xs font-medium text-ios-subtext mb-1 uppercase tracking-wider">CSV
                         網址</label>
                     <input type="text" id="setupInput"
-                        class="w-full bg-ios-input border border-ios-separator rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-ios-blue focus:ring-1 focus:ring-ios-blue transition-all"
+                        class="ios-input w-full rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none"
                         placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
                 </div>
                 <!-- Accordion for Instructions -->
@@ -237,7 +379,7 @@
                         測試連線
                     </button>
                     <button id="saveConnectionBtn"
-                        class="flex-1 py-3 rounded-xl bg-ios-blue text-white font-semibold text-sm hover:bg-blue-600 transition-colors shadow-lg shadow-blue-900/20">
+                        class="ios-button flex-1 py-3 rounded-xl text-white font-semibold text-sm">
                         開始使用
                     </button>
                 </div>
@@ -291,7 +433,7 @@
                 </svg>
             </div>
             <input type="text" id="searchInput"
-                class="block w-full pl-10 pr-3 py-2.5 rounded-xl bg-ios-input border-none text-ios-text placeholder-ios-subtext focus:ring-2 focus:ring-ios-blue focus:outline-none text-lg transition-all"
+                class="ios-input block w-full pl-10 pr-3 py-2.5 rounded-xl border-none text-ios-text placeholder-ios-subtext focus:outline-none text-lg"
                 placeholder="輸入物品名稱 (例如: 電池)..." aria-label="搜尋物品">
             <!-- Clear Button -->
             <button id="clearBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden" aria-label="清除搜尋">
@@ -331,7 +473,8 @@
         <div id="categoryFilter" class="mt-3 hidden">
             <div class="flex items-center justify-between mb-2 px-1">
                 <div class="text-xs text-ios-subtext">類別篩選</div>
-                <button id="clearCategoriesBtn" class="text-xs text-ios-blue hover:text-blue-400 transition-colors hidden">
+                <button id="clearCategoriesBtn"
+                    class="text-xs text-ios-blue hover:text-blue-400 transition-colors hidden">
                     清除篩選
                 </button>
             </div>
@@ -433,8 +576,7 @@
                 </div>
             </div>
 
-            <button id="reloadAfterSetup"
-                class="w-full py-3 rounded-xl bg-ios-blue text-white font-semibold hover:bg-blue-600 transition-colors">
+            <button id="reloadAfterSetup" class="ios-button w-full py-3 rounded-xl text-white font-semibold">
                 我已新增資料，重新載入
             </button>
         </div>
@@ -996,12 +1138,8 @@
             // Add "All" button
             const allBtn = document.createElement('button');
             const isAllSelected = STATE.selectedCategories.length === 0;
-            allBtn.className = `whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95 ${
-                isAllSelected 
-                    ? 'bg-ios-blue text-white border-ios-blue shadow-md shadow-blue-900/30' 
-                    : 'bg-ios-input text-ios-subtext border-ios-separator hover:bg-gray-700 hover:text-white'
-            }`;
-            allBtn.innerHTML = '全部 <span class="ml-1 text-xs opacity-75">' + STATE.data.length + '</span>';
+            allBtn.className = `category-tag whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium ${isAllSelected ? 'active text-white' : 'text-ios-subtext'}`;
+            allBtn.innerHTML = '全部 <span class="badge' + (isAllSelected ? ' badge-active' : '') + '">' + STATE.data.length + '</span>';
             allBtn.addEventListener('click', () => {
                 STATE.selectedCategories = [];
                 generateCategoryFilter();
@@ -1013,12 +1151,8 @@
             categories.forEach(cat => {
                 const btn = document.createElement('button');
                 const isSelected = STATE.selectedCategories.includes(cat);
-                btn.className = `whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium border transition-all active:scale-95 ${
-                    isSelected 
-                        ? 'bg-ios-blue text-white border-ios-blue shadow-md shadow-blue-900/30' 
-                        : 'bg-ios-input text-ios-subtext border-ios-separator hover:bg-gray-700 hover:text-white'
-                }`;
-                btn.innerHTML = `${cat} <span class="ml-1 text-xs opacity-75">${categoryCounts[cat]}</span>`;
+                btn.className = `category-tag whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium ${isSelected ? 'active text-white' : 'text-ios-subtext'}`;
+                btn.innerHTML = `${cat} <span class="badge${isSelected ? ' badge-active' : ''}">${categoryCounts[cat]}</span>`;
                 btn.addEventListener('click', () => {
                     toggleCategory(cat);
                 });
@@ -1176,7 +1310,7 @@
 
             data.forEach(row => {
                 const card = document.createElement('div');
-                card.className = 'bg-ios-card rounded-xl p-4 mb-3 border border-ios-separator shadow-sm active:scale-95 transition-transform duration-200 cursor-pointer';
+                card.className = 'ios-card rounded-2xl p-5 mb-3 cursor-pointer';
                 card.setAttribute('role', 'button');
                 card.setAttribute('tabindex', '0');
 
@@ -1188,25 +1322,25 @@
 
                 card.innerHTML = `
                     <div class="flex items-start justify-between pointer-events-none">
-                        <div>
-                            <h3 class="text-xl font-bold text-white mb-1">${itemHtml}</h3>
-                            <span class="inline-block px-2 py-0.5 rounded-md bg-gray-700 text-gray-300 text-xs mb-3">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-white mb-1.5 tracking-tight">${itemHtml}</h3>
+                            <span class="inline-block px-2.5 py-1 rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 text-gray-200 text-xs font-medium border border-gray-600/50">
                                 ${catHtml}
                             </span>
                         </div>
-                        <div class="text-right">
-                             <div class="text-2xl opacity-80">📦</div>
+                        <div class="text-right ml-3">
+                             <div class="text-3xl opacity-80">📦</div>
                         </div>
                     </div>
                     
-                    <div class="space-y-2 mt-1 pointer-events-none">
+                    <div class="space-y-2.5 mt-4 pointer-events-none">
                         <div class="flex items-center text-ios-subtext">
-                            <span class="w-4 h-4 mr-2 opacity-70">📍</span>
-                            <span class="text-sm font-medium text-white">${locHtml}</span>
+                            <span class="w-5 h-5 mr-2.5 opacity-70 flex items-center justify-center">📍</span>
+                            <span class="text-sm font-medium text-ios-textSecondary">${locHtml}</span>
                         </div>
                         <div class="flex items-center text-ios-subtext">
-                            <span class="w-4 h-4 mr-2 opacity-70">📥</span>
-                            <span class="text-sm text-gray-400">${contHtml}</span>
+                            <span class="w-5 h-5 mr-2.5 opacity-70 flex items-center justify-center">📥</span>
+                            <span class="text-sm text-ios-subtext">${contHtml}</span>
                         </div>
                     </div>
                 `;
