@@ -28,22 +28,23 @@
                     },
                     colors: {
                         ios: {
-                            bg: '#000000',
-                            card: '#1C1C1E',
-                            cardHover: '#2C2C2E',
-                            input: '#1C1C1E',
-                            inputBorder: '#38383A',
-                            text: '#FFFFFF',
-                            textSecondary: '#EBEBF5',
-                            subtext: '#98989D',
-                            subtextLight: '#636366',
-                            blue: '#0A84FF',
-                            blueHover: '#0077ED',
-                            blueDark: '#0051D5',
-                            separator: '#38383A',
-                            success: '#30D158',
-                            warning: '#FFD60A',
-                            error: '#FF453A'
+                            bg: '#F2F2F7',
+                            card: '#FFFFFF',
+                            cardHover: '#FAFAFA',
+                            input: '#FFFFFF',
+                            inputBorder: '#E5E5EA',
+                            text: '#000000',
+                            textSecondary: '#1C1C1E',
+                            subtext: '#8E8E93',
+                            subtextLight: '#C7C7CC',
+                            blue: '#007AFF',
+                            blueHover: '#0051D5',
+                            blueDark: '#0040DD',
+                            separator: '#C6C6C8',
+                            success: '#34C759',
+                            warning: '#FF9500',
+                            error: '#FF3B30',
+                            shadow: 'rgba(0, 0, 0, 0.04)'
                         }
                     }
                 }
@@ -55,7 +56,7 @@
         /* iOS Scroll Behavior */
         body {
             -webkit-tap-highlight-color: transparent;
-            background-color: #000000;
+            background-color: #F2F2F7;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             font-feature-settings: "kern" 1;
@@ -76,28 +77,28 @@
         .blur-header {
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            background-color: rgba(0, 0, 0, 0.72);
-            border-bottom: 0.5px solid rgba(56, 56, 58, 0.5);
+            background-color: rgba(242, 242, 247, 0.8);
+            border-bottom: 0.5px solid rgba(198, 198, 200, 0.6);
         }
 
         /* Modern Card Styles */
         .ios-card {
-            background: linear-gradient(145deg, #1C1C1E 0%, #1A1A1C 100%);
-            border: 1px solid rgba(56, 56, 58, 0.6);
+            background: #FFFFFF;
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
             box-shadow:
-                0 1px 3px rgba(0, 0, 0, 0.3),
-                0 4px 12px rgba(0, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+                0 1px 3px rgba(0, 0, 0, 0.04),
+                0 4px 12px rgba(0, 0, 0, 0.03),
+                0 0 0 1px rgba(0, 0, 0, 0.02);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .ios-card:hover {
-            background: linear-gradient(145deg, #2C2C2E 0%, #252527 100%);
-            border-color: rgba(56, 56, 58, 0.8);
+            background: #FAFAFA;
+            border-color: rgba(0, 0, 0, 0.06);
             box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.4),
-                0 8px 20px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                0 2px 8px rgba(0, 0, 0, 0.06),
+                0 8px 20px rgba(0, 0, 0, 0.04),
+                0 0 0 1px rgba(0, 0, 0, 0.03);
             transform: translateY(-2px);
         }
 
@@ -128,9 +129,9 @@
         /* Skeleton Animation */
         .skeleton {
             background: linear-gradient(90deg,
-                    #1C1C1E 0%,
-                    #2C2C2E 50%,
-                    #1C1C1E 100%);
+                    #E5E5EA 0%,
+                    #F2F2F7 50%,
+                    #E5E5EA 100%);
             background-size: 200% 100%;
             animation: skeleton-loading 1.8s ease-in-out infinite;
         }
@@ -170,7 +171,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #98989D;
+            color: #8E8E93;
             font-size: 0.875rem;
             transform: translateY(-100%);
             pointer-events: none;
@@ -179,12 +180,11 @@
         /* Search Highlight */
         mark {
             background: linear-gradient(135deg,
-                    rgba(255, 214, 10, 0.35) 0%,
+                    rgba(255, 204, 0, 0.3) 0%,
                     rgba(255, 214, 10, 0.25) 100%);
             color: inherit;
             border-radius: 3px;
             padding: 1px 3px;
-            box-shadow: 0 0 10px rgba(255, 214, 10, 0.15);
         }
 
         /* Toast Animation */
@@ -206,51 +206,51 @@
 
         /* Button Styles */
         .ios-button {
-            background: linear-gradient(180deg, #0A84FF 0%, #0077ED 100%);
+            background: linear-gradient(180deg, #007AFF 0%, #0051D5 100%);
             box-shadow:
-                0 1px 3px rgba(10, 132, 255, 0.3),
-                0 4px 12px rgba(10, 132, 255, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                0 1px 3px rgba(0, 122, 255, 0.25),
+                0 4px 12px rgba(0, 122, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .ios-button:hover {
-            background: linear-gradient(180deg, #0077ED 0%, #0051D5 100%);
+            background: linear-gradient(180deg, #0051D5 0%, #0040DD 100%);
             box-shadow:
-                0 2px 8px rgba(10, 132, 255, 0.4),
-                0 8px 20px rgba(10, 132, 255, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+                0 2px 8px rgba(0, 122, 255, 0.3),
+                0 8px 20px rgba(0, 122, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
             transform: translateY(-1px);
         }
 
         .ios-button:active {
             transform: scale(0.97) translateY(0);
             box-shadow:
-                0 1px 2px rgba(10, 132, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+                0 1px 2px rgba(0, 122, 255, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         /* Category Tag Styles */
         .category-tag {
-            background: linear-gradient(145deg, #1C1C1E 0%, #1A1A1C 100%);
-            border: 1px solid rgba(56, 56, 58, 0.6);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            background: #FFFFFF;
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .category-tag:hover {
-            background: linear-gradient(145deg, #2C2C2E 0%, #252527 100%);
-            border-color: rgba(56, 56, 58, 0.8);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+            background: #F9F9F9;
+            border-color: rgba(0, 0, 0, 0.12);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
 
         .category-tag.active {
-            background: linear-gradient(180deg, #0A84FF 0%, #0077ED 100%);
-            border-color: #0A84FF;
+            background: linear-gradient(180deg, #007AFF 0%, #0051D5 100%);
+            border-color: #007AFF;
             box-shadow:
-                0 2px 8px rgba(10, 132, 255, 0.35),
-                0 4px 16px rgba(10, 132, 255, 0.20),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                0 2px 8px rgba(0, 122, 255, 0.3),
+                0 4px 16px rgba(0, 122, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
         .category-tag:active {
@@ -260,36 +260,36 @@
         /* Scope Button Styles */
         .scope-btn {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(145deg, #1C1C1E 0%, #1A1A1C 100%);
-            border: 1px solid rgba(56, 56, 58, 0.6);
+            background: #FFFFFF;
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
         }
 
         .scope-btn:hover {
-            background: linear-gradient(145deg, #2C2C2E 0%, #252527 100%);
+            background: #F9F9F9;
         }
 
         .scope-btn.active {
-            background: linear-gradient(180deg, #0A84FF 0%, #0077ED 100%);
+            background: linear-gradient(180deg, #007AFF 0%, #0051D5 100%);
             color: white;
-            border-color: #0A84FF;
+            border-color: #007AFF;
             box-shadow:
-                0 2px 8px rgba(10, 132, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                0 2px 8px rgba(0, 122, 255, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
 
         /* Input Styles */
         .ios-input {
-            background: rgba(28, 28, 30, 0.8);
-            border: 1px solid rgba(56, 56, 58, 0.6);
+            background: #FFFFFF;
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .ios-input:focus {
-            background: rgba(28, 28, 30, 0.95);
-            border-color: #0A84FF;
+            background: #FFFFFF;
+            border-color: #007AFF;
             box-shadow:
-                0 0 0 3px rgba(10, 132, 255, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.2);
+                0 0 0 3px rgba(0, 122, 255, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         /* Badge Styles */
@@ -302,14 +302,14 @@
             padding: 0 5px;
             font-size: 11px;
             font-weight: 600;
-            background: rgba(152, 152, 157, 0.2);
+            background: rgba(142, 142, 147, 0.12);
             border-radius: 9px;
-            color: #98989D;
+            color: #8E8E93;
         }
 
         .badge-active {
-            background: rgba(255, 255, 255, 0.25);
-            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.95);
         }
     </style>
 </head>
@@ -1323,13 +1323,13 @@
                 card.innerHTML = `
                     <div class="flex items-start justify-between pointer-events-none">
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-white mb-1.5 tracking-tight">${itemHtml}</h3>
-                            <span class="inline-block px-2.5 py-1 rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 text-gray-200 text-xs font-medium border border-gray-600/50">
+                            <h3 class="text-xl font-semibold text-ios-text mb-1.5 tracking-tight">${itemHtml}</h3>
+                            <span class="inline-block px-2.5 py-1 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 text-xs font-medium border border-gray-200">
                                 ${catHtml}
                             </span>
                         </div>
                         <div class="text-right ml-3">
-                             <div class="text-3xl opacity-80">📦</div>
+                             <div class="text-3xl opacity-70">📦</div>
                         </div>
                     </div>
                     
@@ -1360,31 +1360,31 @@
             UI.modalBody.innerHTML = `
                 <div>
                     <label class="text-xs text-ios-subtext uppercase tracking-wider">物品名稱</label>
-                    <h2 id="modalTitle" class="text-3xl font-bold text-white mt-1">${item.Item || '未命名'}</h2>
+                    <h2 id="modalTitle" class="text-3xl font-bold text-ios-text mt-1">${item.Item || '未命名'}</h2>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-ios-input/50 p-3 rounded-xl">
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
                         <label class="text-xs text-ios-subtext">分類</label>
-                        <p class="text-lg font-medium text-white">${item.Category || '-'}</p>
+                        <p class="text-lg font-medium text-ios-text">${item.Category || '-'}</p>
                     </div>
-                    <div class="bg-ios-input/50 p-3 rounded-xl">
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
                         <label class="text-xs text-ios-subtext">容器</label>
-                        <p class="text-lg font-medium text-white">${item.Container || '-'}</p>
+                        <p class="text-lg font-medium text-ios-text">${item.Container || '-'}</p>
                     </div>
                 </div>
 
-                <div class="bg-ios-input/30 p-4 rounded-xl border border-ios-separator">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <label class="flex items-center text-xs text-ios-subtext mb-2">
                         <span class="mr-1">📍</span> 詳細位置
                     </label>
-                    <p class="text-xl text-white font-medium">${item.Location || '-'}</p>
+                    <p class="text-xl text-ios-text font-medium">${item.Location || '-'}</p>
                 </div>
 
                 ${item.Notes ? `
-                <div class="bg-ios-input/30 p-4 rounded-xl border border-ios-separator">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <label class="text-xs text-ios-subtext mb-1 block">📝 備註</label>
-                    <p class="text-base text-gray-300 whitespace-pre-wrap">${item.Notes}</p>
+                    <p class="text-base text-ios-textSecondary whitespace-pre-wrap">${item.Notes}</p>
                 </div>` : ''}
             `;
 
